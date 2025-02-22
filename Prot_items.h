@@ -36,12 +36,16 @@ class Item {
 class Stilts : public Item {
     public:
         static int total_stilts;
-        const static int max_stilts = 7; // if >= 5 stilts, there's less resistance to wind
-        Stilts()
+        const static int max_stilts = 5; // if >= 5 stilts, there's less resistance to wind
+        Stilts(Person p)
             : Item(3, 10) { //health will be 20 when upgrades (made stone) are bought
                 this->height = 1;
                 this->support = false;
                 total_stilts++;
+                if (total_stilts >= max_stilts) {
+                    p.set_wind_prot(p.get_wind_prot() - 1);
+                }
+                p.set_water_prot(p.get_water_prot() + 1);
             }
         float get_height() {
             return this->height;

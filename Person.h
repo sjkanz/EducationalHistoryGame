@@ -10,25 +10,29 @@
 
 class Person {
     private:
-        float money;
+        float money; // how much money do you have?
         float health; // how much health do you have?
         int wind_prot; // how much wind protection do you have?
         int water_prot; // how well can you protect against floods?
-        std::string filename;
-        std::type_info items;
+        std::vector<Item*> items;
     public:
-        Person(float health, float money, int wind_prot, int water_prot, std::string filename) {
+        Person(float health, float money, int wind_prot, int water_prot, std::vector<Item*> items) {
             this->health = health;
             this->money = money;
             this->wind_prot = wind_prot;
             this->water_prot = water_prot;
-            this->filename = filename;
         }
         float get_money() {
             return this->money;
         }
         void set_money(float money) {
             this->money = money;
+        }
+        void add_money(float money) {
+            this->money += money;
+        }
+        void remove_money(float money) {
+            this->money -= money;
         }
         float get_health() {
             return this->health;
@@ -48,20 +52,26 @@ class Person {
         void set_water_prot(int water_prot) {
             this->water_prot = water_prot;
         }
-        bool add_item(item_type item, Item item_obj) {
-            std::fstream output(this->filename, std::ios::binary | std::ios::app);
-            if (output.is_open()) {
-                if (item == item_type::STILTS) {
-                    
-                    output.write(reinterpret_cast<char*>(&item_obj), sizeof(Item));
-                }
-                output.close();
-            }
-            else {
-                return false;
-            }
-            return true;
+        std::vector<Item*> get_items() {
+            return this->items;
         }
+        void set_items(std::vector<Item*> items) {
+            this->items = items;
+        }
+        void add_item(Item* item) {
+            this->money += item->get_cost();
+            this->items.push_back(item);
+        }
+        void remove_item(Item* item) {
+            this->money -= item->get_cost();
+            for (int i = 0; i < this->items.size(); i++) {
+                if (this->items[i] == item) {
+                    this->items.erase(this->items.begin() + i);
+                    break;
+                }
+            }
+        }
+
 };
 
 #endif
