@@ -3,11 +3,17 @@
 #ifndef prot_items
 #define prot_items
 
+enum class item_type {
+    STILTS//,
+    // UPGRADE
+};
+
 class Item {
     private:
         float cost;
         int health;
         bool destroyed;
+        item_type type;
     public:
         Item(float cost, int health) {
             this->cost = cost;
