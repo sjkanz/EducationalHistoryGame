@@ -14,6 +14,7 @@ class Person {
         float health; // how much health do you have?
         int wind_prot; // how much wind protection do you have?
         int water_prot; // how well can you protect against floods?
+        int level; // what level are you on?
         std::vector<Item*> items;
     public:
         Person(float health, float money, int wind_prot, int water_prot, std::vector<Item*> items) {
@@ -57,6 +58,12 @@ class Person {
         }
         void set_items(std::vector<Item*> items) {
             this->items = items;
+        }
+        int get_level() {
+            return this->level;
+        }
+        void set_level(int level) {
+            this->level = level;
         }
         void add_item(Item* item) {
             this->money += item->get_cost();

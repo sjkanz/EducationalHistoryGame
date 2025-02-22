@@ -7,11 +7,16 @@
 #include <chrono>
 #include <fstream>
 #include <iostream>
+#include <random>
 #include <string>
 #include <thread>
 #include <vector>
 #include <windows.h>
 
+//variables
+bool timer_expired = false;
+
+// function prototypes
 LPCWSTR ConvertToLPCWSTR(const char*);
 int go_fish();
 int print_menu();
@@ -19,9 +24,13 @@ int shop();
 int go_flood();
 
 
-void timer(int seconds) {
-    std::this_thread::sleep_for(std::chrono::seconds(seconds));
-    std::cout << "Timer expired!" << std::endl;
+void timer() {
+    timer_expired = false;
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> distrib(260, 340);
+    std::this_thread::sleep_for(std::chrono::seconds(distrib(gen)));
+    timer_expired = true;
 }
 
 int Stilts::total_stilts = 0;
@@ -48,14 +57,17 @@ int main() {
     Fish f(3); // fish costs 3 shells
     p.add_money(f.get_cost());
     std::cout<<"You caught a fish! You now have "<<p.get_money()<<" shells."<<std::endl;
+    p.set_level(1);
+    std::cout<<"You have reached level 1!"<<std::endl;
     std::cout<<"Look! You unlocked something."<<std::endl;
     MessageBoxW(NULL, ConvertToLPCWSTR("New Item in Shop: Stilts!"), ConvertToLPCWSTR("New Item Unlocked"), MB_OK | MB_ICONINFORMATION);
-    p.add_item(Stilts());
+    p.add_item(&Stilts(&p));
     p.remove_money(3);
     std::cout<<"You now have stilts! You raised your house up by one."<<std::endl;
     std::cout<<"Stilts help protect against floods. They cost 3 shells."<<std::endl;
     std::cout<<"Go ahead and buy another!"<<std::endl;
-    int choice = print_menu(p);
+    int choice = print_menu(&p);
+    std::thread timerThread(timer);
     while (choice != 3) {
         while (!(choice == 1 || choice == 2)) {
             std::cout<<"That's not one of the options. Please try again."<<std::endl;
@@ -70,12 +82,12 @@ int main() {
                 std::cout<<"That's not one of the options. Please try again."<<std::endl;
                 choice = shop();
             }
-            if(choice == 1 && valid_purchase(3, p)) {
-                p.add_item(Stilts());
+            if(choice == 1 && valid_purchase(3, &p)) {
+                p.add_item(&Stilts(&p));
                 p.remove_money(3);
                 std::cout<<"You bought stilts! You raised your house up by one."<<std::endl;
             }
-            else if (choice == 1 && !valid_purchase(3, p)) {
+            else if (choice == 1 && !valid_purchase(3, &p)) {
                 std::cout<<"You don't have enough money to buy stilts. You still have "<<p.get_money()<<" shells."<<std::endl;
             }
             else if (choice == 2) {
@@ -87,7 +99,7 @@ int main() {
         std::cin >> ready;
         if (ready == 'n') {
             std::cout<<"No worries! You have more time!"<<std::endl;
-            choice = print_menu(p);
+            choice = print_menu(&p);
         }
         else if (ready == 'y') {
             choice = 3;
@@ -95,23 +107,64 @@ int main() {
     }
     std::cout<<"You have decided to face the flood. Let's see what happens."<<std::endl;
     std::cout<<"Here comes the flood!"<<std::endl;
-
+    Flood flood(5, p.get_water_prot() - 1);
+    std::cout<<"You survived the flood! You still have "<<p.get_health()<<" health."<<std::endl;
+    std::cout<<"That's the basis of the game! As you progress, you will unlock more items and face disasters."<<std::endl;
+    std::cout<<"Different disasters will require different items to protect against."<<std::endl;
+    std::cout<<"Good luck!"<<std::endl;
+    // end of Walkthrough
+    //starting the timer in a separate thread
+    std::thread timerThread(timer);
+    //main game loop
+    choice = print_menu(&p);
+    while (choice != 3) {
+        while (!(choice == 1 || choice == 2)) {
+            std::cout<<"That's not one of the options. Please try again."<<std::endl;
+            choice = print_menu();
+        }
+        if (choice == 1) {
+            go_fish(3);
+        }
+        else if (choice == 2) {
+            choice = shop();
+            while (!(choice == 1 || choice == 2)) {
+                std::cout<<"That's not one of the options. Please try again."<<std::endl;
+                choice = shop();
+            }
+            if(choice == 1 && valid_purchase(3, &p)) {
+                p.add_item(&Stilts(&p));
+                p.remove_money(3);
+                std::cout<<"You bought stilts! You raised your house up by one."<<std::endl;
+            }
+            else if (choice == 1 && !valid_purchase(3, &p)) {
+                std::cout<<"You don't have enough money to buy stilts. You still have "<<p.get_money()<<" shells."<<std::endl;
+            }
+            else if (choice == 2) {
+                std::cout<<"You decided not to buy stilts. You still have "<<p.get_money()<<" shells."<<std::endl;
+            }
+        }
+        if (timer_expired) {
+            // insert function here
+        }
+        choice = print_menu(&p);
+    }
     return 0;
 }
 
 
-int print_menu(Person p) {
+int print_menu(Person *p) {
     std::cout<<"Current Stats:"<<std::endl;
-    std::cout<<"Health: "<<p.get_health()<<std::endl;
-    std::cout<<"Money: "<<p.get_money()<<"\n"<<std::endl;
+    std::cout<<"Health: "<<(*p).get_health()<<std::endl;
+    std::cout<<"Money: "<<(*p).get_money()<<"\n"<<std::endl;
     std::cout<<"What would you like to do?"<<std::endl;
     std::cout<<"1. Go fishing"<<std::endl;
     std::cout<<"2. Open Shop"<<std::endl;
+    std::cout<<"3. Exit"<<std::endl;
     return std::cin.get();
 }
 
-bool valid_purchase(int cost, Person p) {
-    if (p.get_money() >= cost) {
+bool valid_purchase(int cost, Person *p) {
+    if ((*p).get_money() >= cost) {
         return true;
     }
     return false;

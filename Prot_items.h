@@ -14,10 +14,13 @@ class Item {
         int health;
         bool destroyed;
         item_type type;
+        disaster_type weakness;
     public:
-        Item(float cost, int health) {
+        Item(float cost, int health, disaster_type weakness) {
             this->cost = cost;
             this->health = health;
+            this->destroyed = false;
+            this->weakness = weakness;
         }
         float get_cost() {
             return this->cost;
@@ -31,21 +34,39 @@ class Item {
         void set_health(int health) {
             this->health = health;
         }
+        bool get_destroyed() {
+            return this->destroyed;
+        }
+        void set_destroyed(bool destroyed) {
+            this->destroyed = destroyed;
+        }
+        item_type get_type() {
+            return this->type;
+        }
+        void set_type(item_type type) {
+            this->type = type;
+        }
+        disaster_type get_weakness() {
+            return this->weakness;
+        }
+        void set_weakness(disaster_type weakness) {
+            this->weakness = weakness;
+        }
 };
 
 class Stilts : public Item {
     public:
         static int total_stilts;
         const static int max_stilts = 5; // if >= 5 stilts, there's less resistance to wind
-        Stilts(Person p)
-            : Item(3, 10) { //health will be 20 when upgrades (made stone) are bought
+        Stilts(Person *p)
+            : Item(3, 10, disaster_type::FLOOD) { //health will be 20 when upgrades (made stone) are bought
                 this->height = 1;
                 this->support = false;
                 total_stilts++;
                 if (total_stilts >= max_stilts) {
-                    p.set_wind_prot(p.get_wind_prot() - 1);
+                    (*p).set_wind_prot((*p).get_wind_prot() - 1);
                 }
-                p.set_water_prot(p.get_water_prot() + 1);
+                (*p).set_water_prot((*p).get_water_prot() + 1);
             }
         float get_height() {
             return this->height;
