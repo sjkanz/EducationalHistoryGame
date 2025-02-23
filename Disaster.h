@@ -2,6 +2,7 @@
 #define disaster
 // #include "Person.h"
 // #include "Prot_items.h"
+#include <vector>
 
 enum disaster_type {
     TYPHOON,
@@ -129,7 +130,7 @@ class Person {
             this->level = level;
         }
         void add_item(Item item) {
-            this->money += item.get_cost();
+            this->money -= item.get_cost();
             this->items.push_back(item);
         }
         void remove_item(Item item) {

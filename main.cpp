@@ -19,7 +19,6 @@ std::thread threads[numThreads];
 std::random_device rd;
 std::mt19937 gen(rd());
 
-
 // function prototypes
 LPCWSTR ConvertToLPCWSTR(const char*);
 int go_fish(int);
@@ -46,7 +45,6 @@ int main() {
     std::cout<<"To get money, you can fish! Let's try that now."<<std::endl;
     std::cout<<"Do you wish to go fishing? (y/n)"<<std::endl;
     char fish;
-    std::cin >> std::ws; // Skip leading whitespace characters
     std::cin >> fish;
     if (fish == 'n') {
         std::cout<<"You decided not to fish. You still have 0 money."<<std::endl;
@@ -59,38 +57,39 @@ int main() {
         std::cout<<"To play this game, you have to fish, so for now, you're fishing anyway."<<std::endl;
     }
     Fish f(3); // fish costs 3 shells
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
     p.add_money(f.get_cost());
     std::cout<<"You caught a fish! You now have "<<p.get_money()<<" shells."<<std::endl;
     p.set_level(1);
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
     std::cout<<"You have reached level 1!"<<std::endl;
     std::cout<<"Look! You unlocked something."<<std::endl;
     MessageBoxW(NULL, ConvertToLPCWSTR("New Item in Shop: Stilts!"), ConvertToLPCWSTR("New Item Unlocked"), MB_OK | MB_ICONINFORMATION);
     std::cout<<"You unlocked stilts! You can now buy stilts to raise your house up by one."<<std::endl;
     std::cout<<"Stilts help protect against floods. They cost 3 shells."<<std::endl;
     std::cout<<"Would you like to buy some? (y/n)"<<std::endl;
-    std::cin >> std::ws; // Skip leading whitespace characters
-    char input = std::cin.get();
+    char input = ' ';
+    std::cin >> input;
     if (input == 'n') {
         std::cout<<"Too bad, this is the tutorial. You have to buy stilts."<<std::endl;
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
     p.add_item(Stilts(p));
-    p.remove_money(3);
     std::cout<<"You now have stilts! You raised your house up by one."<<std::endl;
     std::cout<<"Stilts help protect against floods. They cost 3 shells."<<std::endl;
     std::cout<<"Go ahead and buy another!"<<std::endl;
     int choice = print_menu(p);
-    std::thread timerThread(timer);
     while (choice != 3) {
-        while (!(choice == 1 || choice == 2)) {
+        while (choice != 1 && choice != 2 && choice != 3) {
             std::cout<<"That's not one of the options. Please try again."<<std::endl;
             choice = print_menu(p);
         }
         if (choice == 1) {
-            go_fish(3);
+            p.add_money(go_fish(3));
         }
         else if (choice == 2) {
             int decision = shop();
-            while ((decision != 1 && decision != 2)) {
+            while (decision != 1 && decision != 2) {
                 std::cout<<"That's not one of the options. Please try again."<<std::endl;
                 decision = shop();
             }
@@ -106,10 +105,12 @@ int main() {
             else if (decision == 2) {
                 std::cout<<"You decided not to buy stilts. You still have "<<p.get_money()<<" shells."<<std::endl;
             }
+        } else {
+            std::cout<<"ERR"<<std::endl;
         }
+
         std::cout<<"Are you ready for the flood? y/n"<<std::endl;
         char ready;
-        std::cin >> std::ws; // Skip leading whitespace characters
         std::cin >> ready;
         if (ready == 'n') {
             std::cout<<"No worries! You have more time!"<<std::endl;
@@ -202,7 +203,7 @@ bool crisis(Person& p) {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> distrib(1, 3);
-    int hazard = distrib(gen);
+    int hazard = 1;//distrib(gen);
     std::uniform_int_distribution<> distrib2(1, 10);
     if (hazard == 1) {
         std::cout<<"A flood is coming!"<<std::endl;
@@ -229,8 +230,8 @@ int print_menu(Person& p) {
     std::cout<<"1. Go fishing"<<std::endl;
     std::cout<<"2. Open Shop"<<std::endl;
     std::cout<<"3. Exit"<<std::endl;
-    std::cin >> std::ws; // Skip leading whitespace characters
-    int input = std::cin.get();
+    int input = -1;
+    std::cin >> input;
     return input;
 }
 
@@ -246,13 +247,14 @@ int shop() {
     std::cout<<"What would you like to buy?"<<std::endl;
     std::cout<<"1. Stilts"<<std::endl;
     std::cout<<"2. Exit"<<std::endl;
-    std::cin >> std::ws; // Skip leading whitespace characters
-    int input = std::cin.get();
+    int input = -1;
+    std::cin >> input;
     return input;
 }
 
 int go_fish(int cost) {
     Fish f(cost);
+    std::cout<<"You caught a fish!"<<std::endl;
     return f.get_cost();
 }
 

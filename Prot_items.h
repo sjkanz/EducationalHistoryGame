@@ -15,10 +15,10 @@ class Stilts : public Item {
                 this->height = 1;
                 this->support = false;
                 total_stilts++;
-                    if (total_stilts >= max_stilts) {
-                        (p).set_wind_prot((p).get_wind_prot() - 1);
-                    }
-                    (p).set_water_prot((p).get_water_prot() + 1);
+                if (total_stilts >= max_stilts) {
+                    (p).set_wind_prot((p).get_wind_prot() - 1);
+                }
+                (p).set_water_prot((p).get_water_prot() + 1);
             }
         float get_height() {
             return this->height;
