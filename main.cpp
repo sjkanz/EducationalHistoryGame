@@ -1,4 +1,3 @@
-
 #include "Disaster.h"
 #include "Fishing.h"
 #include "Person.h"
@@ -15,21 +14,24 @@
 
 //variables
 bool timer_expired = false;
+const int numThreads = 10;
+std::thread threads[numThreads];
+std::random_device rd;
+std::mt19937 gen(rd());
+
 
 // function prototypes
 LPCWSTR ConvertToLPCWSTR(const char*);
-int go_fish();
-int print_menu();
+int go_fish(int);
+bool valid_purchase(int, Person&);
+bool crisis(Person&);
+int print_menu(Person&);
 int shop();
-int go_flood();
-bool hazard(Person*);
-
+bool hazard(Person&);
 
 void timer() {
     timer_expired = false;
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> distrib(260, 340);
+    std::uniform_int_distribution<> distrib(120, 300);
     std::this_thread::sleep_for(std::chrono::seconds(distrib(gen)));
     timer_expired = true;
 }
@@ -39,11 +41,12 @@ int Stilts::total_stilts = 0;
 int main() {
     // walkthrough
     // 1. catch fish
-    Person p(100, 0, 0, 0, std::vector<Item*>());
+    Person p(100, 0, 0, 0);
     std::cout<<"Welcome to the game! You have 100 health and 0 money."<<std::endl;
     std::cout<<"To get money, you can fish! Let's try that now."<<std::endl;
     std::cout<<"Do you wish to go fishing? (y/n)"<<std::endl;
     char fish;
+    std::cin >> std::ws; // Skip leading whitespace characters
     std::cin >> fish;
     if (fish == 'n') {
         std::cout<<"You decided not to fish. You still have 0 money."<<std::endl;
@@ -62,45 +65,55 @@ int main() {
     std::cout<<"You have reached level 1!"<<std::endl;
     std::cout<<"Look! You unlocked something."<<std::endl;
     MessageBoxW(NULL, ConvertToLPCWSTR("New Item in Shop: Stilts!"), ConvertToLPCWSTR("New Item Unlocked"), MB_OK | MB_ICONINFORMATION);
-    p.add_item(&Stilts(&p));
+    std::cout<<"You unlocked stilts! You can now buy stilts to raise your house up by one."<<std::endl;
+    std::cout<<"Stilts help protect against floods. They cost 3 shells."<<std::endl;
+    std::cout<<"Would you like to buy some? (y/n)"<<std::endl;
+    std::cin >> std::ws; // Skip leading whitespace characters
+    char input = std::cin.get();
+    if (input == 'n') {
+        std::cout<<"Too bad, this is the tutorial. You have to buy stilts."<<std::endl;
+    }
+    p.add_item(Stilts(p));
     p.remove_money(3);
     std::cout<<"You now have stilts! You raised your house up by one."<<std::endl;
     std::cout<<"Stilts help protect against floods. They cost 3 shells."<<std::endl;
     std::cout<<"Go ahead and buy another!"<<std::endl;
-    int choice = print_menu(&p);
+    int choice = print_menu(p);
     std::thread timerThread(timer);
     while (choice != 3) {
         while (!(choice == 1 || choice == 2)) {
             std::cout<<"That's not one of the options. Please try again."<<std::endl;
-            choice = print_menu();
+            choice = print_menu(p);
         }
         if (choice == 1) {
             go_fish(3);
         }
         else if (choice == 2) {
-            int choice = shop();
-            while (!(choice == 1 || choice == 2)) {
+            int decision = shop();
+            while ((decision != 1 && decision != 2)) {
                 std::cout<<"That's not one of the options. Please try again."<<std::endl;
-                choice = shop();
+                decision = shop();
             }
-            if(choice == 1 && valid_purchase(3, &p)) {
-                p.add_item(&Stilts(&p));
+            if(decision == 1 && valid_purchase(3, p)) {
+                Stilts temp(p);
+                p.add_item(temp);
                 p.remove_money(3);
                 std::cout<<"You bought stilts! You raised your house up by one."<<std::endl;
             }
-            else if (choice == 1 && !valid_purchase(3, &p)) {
+            else if (decision == 1 && !valid_purchase(3, p)) {
                 std::cout<<"You don't have enough money to buy stilts. You still have "<<p.get_money()<<" shells."<<std::endl;
             }
-            else if (choice == 2) {
+            else if (decision == 2) {
                 std::cout<<"You decided not to buy stilts. You still have "<<p.get_money()<<" shells."<<std::endl;
             }
         }
         std::cout<<"Are you ready for the flood? y/n"<<std::endl;
         char ready;
+        std::cin >> std::ws; // Skip leading whitespace characters
         std::cin >> ready;
         if (ready == 'n') {
             std::cout<<"No worries! You have more time!"<<std::endl;
-            choice = print_menu(&p);
+            choice = print_menu(p);
         }
         else if (ready == 'y') {
             choice = 3;
@@ -115,21 +128,43 @@ int main() {
     std::cout<<"Good luck!"<<std::endl;
     // end of Walkthrough
     //starting the timer in a separate thread
-    std::thread timerThread(timer);
-    timerThread.detach();
+    int index = 0;
+    threads[index] = std::thread(timer);
+    index++;
     //main game loop
-    choice = print_menu(&p);
+    choice = print_menu(p);
+    
     bool hazard = false;
-    while (choice != 3) {
-        if (hazard && timer_expired) {
-            std::thread timerThread(timer);
+    while (choice != 3 && index <= numThreads && p.get_health() > 0) {
+        if (hazard && timer_expired && index < numThreads) {
+            hazard = false;
+            threads[index] = std::thread(timer);
+            index++;
         }
         while (!(choice == 1 || choice == 2)) {
             std::cout<<"That's not one of the options. Please try again."<<std::endl;
-            choice = print_menu();
+            choice = print_menu(p);
         }
         if (choice == 1) {
-            go_fish(3);
+            std::uniform_int_distribution<> fish1(1, 2);
+            std::uniform_int_distribution<> fish2(1, 5);
+            if (fish1(gen) == fish2(gen)) {
+                std::cout<<"You caught a fish!"<<std::endl;
+                p.add_money(go_fish(15));
+                std::cout<<"Wow! You got lucky!"<<std::endl;
+                std::cout<<"You now have "<<p.get_money()<<" shells."<<std::endl;
+            } else if (fish2(gen) > 2) {
+                std::cout<<"You caught a fish!"<<std::endl;
+                p.add_money(go_fish(fish2(gen)));
+                std::cout<<"You now have "<<p.get_money()<<" shells."<<std::endl;
+            }
+            else {
+                std::cout<<"Oh no! Your fishing line broke!"<<std::endl;
+                std::cout<<"Spending money to repair it..."<<std::endl;
+                p.remove_money(2);
+                std::cout<<"You didn't catch a fish."<<std::endl;
+                std::cout<<"You now have "<<p.get_money()<<" shells."<<std::endl;
+            }
         }
         else if (choice == 2) {
             choice = shop();
@@ -137,12 +172,13 @@ int main() {
                 std::cout<<"That's not one of the options. Please try again."<<std::endl;
                 choice = shop();
             }
-            if(choice == 1 && valid_purchase(3, &p)) {
-                p.add_item(&Stilts(&p));
+            if(choice == 1 && valid_purchase(3, p)) {
+                Stilts temp(p);
+                p.add_item(temp);
                 p.remove_money(3);
                 std::cout<<"You bought stilts! You raised your house up by one."<<std::endl;
             }
-            else if (choice == 1 && !valid_purchase(3, &p)) {
+            else if (choice == 1 && !valid_purchase(3, p)) {
                 std::cout<<"You don't have enough money to buy stilts. You still have "<<p.get_money()<<" shells."<<std::endl;
             }
             else if (choice == 2) {
@@ -150,16 +186,19 @@ int main() {
             }
         }
         if (timer_expired) {
-                bool boop = crisis(&p);
+                bool boop = crisis(p);
             // insert function here
         }
-        choice = print_menu(&p);
+        choice = print_menu(p);
     }
     //waiting for thread to finish
+    if(index <= numThreads) {
+        threads[index].join();
+    }
     return 0;
 }
 
-bool crisis(Person *p) {
+bool crisis(Person& p) {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> distrib(1, 3);
@@ -182,19 +221,21 @@ bool crisis(Person *p) {
     return false;
 }
 
-int print_menu(Person *p) {
+int print_menu(Person& p) {
     std::cout<<"Current Stats:"<<std::endl;
-    std::cout<<"Health: "<<(*p).get_health()<<std::endl;
-    std::cout<<"Money: "<<(*p).get_money()<<"\n"<<std::endl;
+    std::cout<<"Health: "<<(p).get_health()<<std::endl;
+    std::cout<<"Money: "<<(p).get_money()<<"\n"<<std::endl;
     std::cout<<"What would you like to do?"<<std::endl;
     std::cout<<"1. Go fishing"<<std::endl;
     std::cout<<"2. Open Shop"<<std::endl;
     std::cout<<"3. Exit"<<std::endl;
-    return std::cin.get();
+    std::cin >> std::ws; // Skip leading whitespace characters
+    int input = std::cin.get();
+    return input;
 }
 
-bool valid_purchase(int cost, Person *p) {
-    if ((*p).get_money() >= cost) {
+bool valid_purchase(int cost, Person& p) {
+    if ((p).get_money() >= cost) {
         return true;
     }
     return false;
@@ -205,24 +246,13 @@ int shop() {
     std::cout<<"What would you like to buy?"<<std::endl;
     std::cout<<"1. Stilts"<<std::endl;
     std::cout<<"2. Exit"<<std::endl;
-    return std::cin.get();
+    std::cin >> std::ws; // Skip leading whitespace characters
+    int input = std::cin.get();
+    return input;
 }
 
 int go_fish(int cost) {
-    std::cout<<"Do you wish to go fishing? (y/n)"<<std::endl;
-    char fish;
-    std::cin >> fish;
-    if (fish == 'n') {
-        std::cout<<"You decided not to fish. You still have 0 money."<<std::endl;
-        return 0;
-    } else if (fish == 'y') {
-        std::cout<<"Yay, let's fish!"<<std::endl;
-    }
-    else {
-        std::cout<<"That's not one of the options. Sending you back to home"<<std::endl;
-        return 0;
-    }
-    Fish f(cost); // fish costs 3 shells
+    Fish f(cost);
     return f.get_cost();
 }
 

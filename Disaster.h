@@ -1,11 +1,146 @@
 #ifndef disaster
 #define disaster
+// #include "Person.h"
+// #include "Prot_items.h"
 
-enum class disaster_type {
+enum disaster_type {
     TYPHOON,
     FLOOD
     // Volcanic_eruption,
     // Earthquake
+};
+
+enum class item_type {
+    STILTS//,
+    // UPGRADE
+};
+
+class Item {
+    private:
+        float cost;
+        int health;
+        bool destroyed;
+        item_type type;
+        int weakness;
+    public:
+        Item(float cost, int health, int weakness) {
+            this->cost = cost;
+            this->health = health;
+            this->destroyed = false;
+            this->weakness = weakness;
+        }
+        float get_cost() {
+            return this->cost;
+        }
+        void set_cost(float cost) {
+            this->cost = cost;
+        }
+        int get_health() {
+            return this->health;
+        }
+        void set_health(int health) {
+            this->health = health;
+        }
+        bool get_destroyed() {
+            return this->destroyed;
+        }
+        void set_destroyed(bool destroyed) {
+            this->destroyed = destroyed;
+        }
+        item_type get_type() {
+            return this->type;
+        }
+        void set_type(item_type type) {
+            this->type = type;
+        }
+        int get_weakness() {
+            return this->weakness;
+        }
+        void set_weakness(int weakness) {
+            this->weakness = weakness;
+        }
+        bool operator==(const Item& other) const {
+            // Compare relevant fields of Item to determine equality
+            return this->cost == other.cost && this->health == other.health && this->weakness == other.weakness;
+        }
+};
+
+class Person {
+    private:
+        float money; // how much money do you have?
+        float health; // how much health do you have?
+        int wind_prot; // how much wind protection do you have?
+        int water_prot; // how well can you protect against floods?
+        int level; // what level are you on?
+        std::vector<Item> items;
+    public:
+        Person(float health, float money, int wind_prot, int water_prot) {
+            this->health = health;
+            this->money = money;
+            this->wind_prot = wind_prot;
+            this->water_prot = water_prot;
+        }
+        Person() {
+            this->health = 100;
+            this->money = 0;
+            this->wind_prot = 0;
+            this->water_prot = 0;
+        }
+        float get_money() {
+            return this->money;
+        }
+        void set_money(float money) {
+            this->money = money;
+        }
+        void add_money(float money) {
+            this->money += money;
+        }
+        void remove_money(float money) {
+            this->money -= money;
+        }
+        float get_health() {
+            return this->health;
+        }
+        void set_health(float health) {
+            this->health = health;
+        }
+        int get_wind_prot() {
+            return this->wind_prot;
+        }
+        void set_wind_prot(int wind_prot) {
+            this->wind_prot = wind_prot;
+        }
+        int get_water_prot() {
+            return this->water_prot;
+        }
+        void set_water_prot(int water_prot) {
+            this->water_prot = water_prot;
+        }
+        std::vector<Item> get_items() {
+            return this->items;
+        }
+        void set_items(std::vector<Item> items) {
+            this->items = items;
+        }
+        int get_level() {
+            return this->level;
+        }
+        void set_level(int level) {
+            this->level = level;
+        }
+        void add_item(Item item) {
+            this->money += item.get_cost();
+            this->items.push_back(item);
+        }
+        void remove_item(Item item) {
+            for (int i = 0; i < this->items.size(); i++) {
+                if (this->items[i] == item) {
+                    this->items.erase(this->items.begin() + i);
+                    break;
+                }
+            }
+        }
+
 };
 
 class Disaster {
@@ -18,7 +153,7 @@ class Disaster {
             this->gen_damage = gen_damage;
             this->type = type;
         }
-        float do_damage(float); // each float is for each of the damages. Returns amt of damage inflicted
+        // float do_damage(float); // each float is for each of the damages. Returns amt of damage inflicted
         // float get_water_dmg() {
         //     return this->water_damage;
         // }
@@ -60,9 +195,9 @@ class Flood : public Disaster{
             : Disaster(gen_damage, disaster_type::FLOOD) {
                 this->flood_height = flood_height;
             }
-        void do_damage(Person *p) {
-            if (this->flood_height > (*p).get_water_prot()) {
-                (*p).set_health((*p).get_health() - get_gen_dmg());
+        void do_damage(Person& p) {
+            if (this->flood_height > (p).get_water_prot()) {
+                (p).set_health((p).get_health() - get_gen_dmg());
             }
         }
     private:
@@ -90,7 +225,7 @@ class Typhoon : public Disaster {
         } 
         bool do_damage(float); // only float for min_wind_height, returns whether damage was successfully inflicted
         bool hasFlood(){return flood;};
-        bool setFlood(bool f){flood = f;};
+        void setFlood(bool f){flood = f;};
         float get_min_wind_height() {return min_wind_height;};
         void set_min_wind_height(float m) {min_wind_height = m;};
     private:
