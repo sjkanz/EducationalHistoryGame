@@ -13,7 +13,7 @@ private:
 public:
     static int total_stilts;
     const int max_stilts = 5; // if >= 5 stilts, there's less resistance to wind
-    Stilts(Person &p) : Item(3.0, 10, FLOOD, "Stilts are a great way to protect against floods."
+    Stilts(Person &p) : Item(3.0, 10, FLOOD, STILTS, "Stilts are a great way to protect against floods."
          " They raise the structure above potential flood levels, protecting the structure from water" 
          " damage and debris in the water. This also improves ventilation under the building, reducing"
          " potential moisture buildup later. Some places in modern day that utilize stilts: Vietnam, Bangladesh,"
@@ -72,7 +72,7 @@ private:
     bool support;
 
 public:
-    StormShutters(Person &p) : Item(5, 10, TYPHOON, "Storm shutters are used to protect against typhoons."
+    StormShutters(Person &p) : Item(5, 10, TYPHOON, STORM_SHUTTERS, "Storm shutters are used to protect against typhoons."
          " They protect windows from flying debris and high winds, reducing the risk of damage to the structure"
          " and the people inside. Some places in modern day that utilize storm shutters: Japan, the Philippines,"
          " the United States, and the Caribbean.")
@@ -115,7 +115,7 @@ class Foundation : public Item {
         float depth;
         bool support;
     public:
-        Foundation(Person &p): Item (5.0, 20, EARTHQUAKE, "Foundation bolting, or seismic retrofitting, "
+        Foundation(Person &p): Item (5.0, 20, EARTHQUAKE, FOUNDATION, "Foundation bolting, or seismic retrofitting, "
             "is a technique used to enhance the earthquake resistance of a building by securely anchoring "
             "the structure to its foundation. This involves installing anchor bolts that attach the building's"
             " wooden frame to a concrete foundation, thus preventing the building from sliding or shifting off "

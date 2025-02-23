@@ -1,7 +1,7 @@
-#include "Disaster.h"
-
 #ifndef fishing
 #define fishing
+
+#include "Disaster.h"
 
 class Fish {
     private:

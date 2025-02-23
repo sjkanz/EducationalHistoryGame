@@ -1,6 +1,6 @@
 #include "Disaster.h"
 #include "Fishing.h"
-#include "Person.h"
+// #include "Person.h"
 #include "Prot_items.h"
 
 #include <chrono>
@@ -23,7 +23,7 @@ std::mt19937 gen(rd());
 LPCWSTR ConvertToLPCWSTR(const char *);
 int go_fish(int);
 bool valid_purchase(int, Person &);
-bool crisis(Person &);
+void crisis(Person &);
 int print_menu(Person &);
 int shop();
 bool hazard(Person &);
@@ -42,7 +42,7 @@ int main()
 {
     // walkthrough
     // 1. catch fish
-    Person p(100, 0, 0, 0);
+    Person p(100, 0, 0, 0, 0);
     std::cout << "Welcome to the game! You have 100 health and 0 money." << std::endl;
     std::cout << "To get money, you can fish! Let's try that now." << std::endl;
     std::cout << "Do you wish to go fishing? (y/n)" << std::endl;
@@ -117,6 +117,11 @@ int main()
             }
             else if (decision == 2)
             {
+                Stilts temp(p);
+                std::cout << temp.get_info() << std::endl;
+            }
+            else
+            {
                 std::cout << "You decided not to buy stilts. You still have " << p.get_money() << " shells." << std::endl;
             }
         }
@@ -153,15 +158,12 @@ int main()
     // index++;
     // main game loop
     choice = print_menu(p);
-
-    bool hazard = false;
+    int turns = 0;
+    std::uniform_int_distribution<> distrib(3, 10);
+    int next_hazard = distrib(gen);
     while (choice != 3 && p.get_health() > 0)
     {
         // std::cout<<"timer: "<<timer_expired<<std::endl;
-        if (hazard)
-        {
-            hazard = false;
-        }
         while (!(choice >= 1 && choice <= 6))
         {
             std::cout << "That's not one of the options. Please try again." << std::endl;
@@ -196,7 +198,7 @@ int main()
         else if (choice == 2)
         {
             choice = shop();
-            while (!(choice >= 1 && choice <= 6))
+            while (!(choice >= 1 && choice <= 4))
             {
                 std::cout << "That's not one of the options. Please try again." << std::endl;
                 choice = shop();
@@ -211,48 +213,106 @@ int main()
             {
                 std::cout << "You don't have enough money to buy stilts. You still have " << p.get_money() << " shells." << std::endl;
             }
-            else if (choice == 6)
+            else if (choice == 2 && valid_purchase(5, p))
+            {
+                StormShutters temp(p);
+                p.add_item(temp);
+                p.set_wind_prot(p.get_wind_prot() + 1);
+                std::cout << "You bought storm shutters! You now have " << p.get_wind_prot() << " wind protection." << std::endl;
+            }
+            else if (choice == 2 && !valid_purchase(5, p))
+            {
+                std::cout << "You don't have enough money to buy storm shutters. You still have " << p.get_money() << " shells." << std::endl;
+            }
+            else if (choice == 3 && valid_purchase(6, p))
+            {
+                Foundation temp(p);
+                p.add_item(temp);
+                p.set_quake_prot(p.get_quake_prot() + 1);
+                std::cout << "You bought foundation bolting! You now have " << p.get_quake_prot() << " earthquake protection." << std::endl;
+            }
+            else if (choice == 3 && !valid_purchase(6, p))
+            {
+                std::cout << "You don't have enough money to buy foundation bolting. You still have " << p.get_money() << " shells." << std::endl;
+            }
+            else if (choice == 4)
+            {
+                std::cout << "Here's some more information about the items." << std::endl;
+                Stilts temp(p);
+                std::cout << temp.get_info() << std::endl;
+                StormShutters temp2(p);
+                std::cout << temp2.get_info() << std::endl;
+                Foundation temp3(p);
+                std::cout << temp3.get_info() << std::endl;
+            }
+            else
             {
                 std::cout << "Come back later! You have " << p.get_money() << " shells." << std::endl;
             }
         }
-        if (timer_expired)
+        if (turns == next_hazard)
         {
-            bool boop = crisis(p);
-            // insert function here
+            crisis(p);
+            next_hazard += distrib(gen);
         }
+        turns++;
         choice = print_menu(p);
     }
+    if (p.get_health() <= 0)
+    {
+        std::cout << "You have died." << std::endl;
+    }
+    else if (p.get_money() < 0) {
+        std::cout << "You have gone bankrupt." << std::endl;
+    }
+    else
+    {
+        std::cout << "You have decided to exit the game." << std::endl;
+    }
+    std::cout << "Thank you for playing!" << std::endl;
     return 0;
 }
 
-bool crisis(Person &p)
+void crisis(Person &p)
 {
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_int_distribution<> distrib(1, 3);
-    int hazard = 1; // distrib(gen);
+    std::uniform_int_distribution<> hazard_picker(1, 3);
+    int hazard = hazard_picker(gen);
+    std::uniform_int_distribution<> tf(1, 2);
     std::uniform_int_distribution<> distrib2(1, 10);
     if (hazard == 1)
     {
         std::cout << "A flood is coming!" << std::endl;
         Flood flood(distrib2(gen), distrib2(gen));
         flood.do_damage(p);
-        return true;
     }
     else if (hazard == 2)
     {
         std::cout << "Oh no! It's a typhoon!" << std::endl;
-        Typhoon typhoon(distrib2(gen), distrib2(gen));
-        typhoon.do_damage(p, distrib2(gen));
-        return true;
+        bool flood = false;
+        if (tf(gen) == 1)
+        {
+            std::cout << "The typhoon is causing a flood!" << std::endl;
+            flood = true;
+        }
+        std::uniform_real_distribution<> windspeed(55, 190);
+        Typhoon typhoon(distrib2(gen), flood, distrib2(gen), windspeed(gen));
+        typhoon.do_damage(p);
     }
     else if (hazard == 3)
     {
-        std::cout << "An earthquake is coming! You need a foundation to protect against it." << std::endl;
-        return true;
+        std::cout << "Hold on! There's an earthquake!" << std::endl;
+        bool flood = false;
+        if (tf(gen) == 1)
+        {
+            std::cout << "The earthquake is causing a flood!" << std::endl;
+            flood = true;
+        }
+        std::uniform_real_distribution<> mag(1.0, 10.0);
+        Earthquake earthquake(distrib2(gen), flood, mag(gen));
+        earthquake.do_damage(p);
     }
-    return false;
 }
 
 int print_menu(Person &p)
@@ -279,6 +339,17 @@ bool valid_purchase(int cost, Person &p)
     return false;
 }
 
+int shop(bool first) {
+    std::cout << "Welcome to the shop!" << std::endl;
+    std::cout << "What would you like to buy?" << std::endl;
+    std::cout << "1. Stilts - 3 shells" << std::endl;
+    std::cout << "2. More info" << std::endl;
+    std::cout << "3. Exit" << std::endl;
+    int input = -1;
+    std::cin >> input;
+    return input;
+}
+
 int shop()
 {
     std::cout << "Welcome to the shop!" << std::endl;
@@ -286,9 +357,9 @@ int shop()
     std::cout << "1. Stilts - 3 shells" << std::endl;
     std::cout << "2. Storm Shutters - 5 shells" << std::endl;
     std::cout << "3. Foundation Bolting - 6 shells" << std::endl;
-    std::cout << "4. Roof Straps and Clips - 8 shells" << std::endl;
-    std::cout << "5. Med Kits - 15 shells" << std::endl;
-    std::cout << "6. Exit" << std::endl;
+    std::cout << "4. More info" << std::endl;
+    // std::cout << "5. Med Kits - 15 shells" << std::endl;
+    std::cout << "5. Exit" << std::endl;
     int input = -1;
     std::cin >> input;
     return input;
@@ -297,7 +368,6 @@ int shop()
 int go_fish(int cost)
 {
     Fish f(cost);
-    std::cout << "You caught a fish!" << std::endl;
     return f.get_cost();
 }
 

@@ -2,6 +2,7 @@
 #define disaster
 // #include "Person.h"
 // #include "Prot_items.h"
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -13,6 +14,13 @@ enum disaster_type
     EARTHQUAKE
 };
 
+enum item_type
+{
+    STILTS,
+    STORM_SHUTTERS,
+    FOUNDATION
+};
+
 class Item
 {
 private:
@@ -21,15 +29,25 @@ private:
     bool destroyed;
     int weakness;
     std::string info;
+    int type;
 
 public:
-    Item(float cost, int health, int weakness, std::string info)
+    Item(float cost, int health, int weakness, int type, std::string info)
     {
         this->cost = cost;
         this->health = health;
         this->destroyed = false;
         this->weakness = weakness;
+        this->type = type;
         this->info = info;
+    }
+    int get_type()
+    {
+        return this->type;
+    }
+    void set_type(int type)
+    {
+        this->type = type;
     }
     float get_cost()
     {
@@ -54,6 +72,23 @@ public:
     void set_destroyed(bool destroyed)
     {
         this->destroyed = destroyed;
+        if (destroyed)
+        {
+            std::string name = " ";
+            if (this->type == STILTS)
+            {
+                name = "stilts";
+            }
+            else if (this->type == STORM_SHUTTERS)
+            {
+                name = "storm shutters";
+            }
+            else if (this->type == FOUNDATION)
+            {
+                name = "foundation";
+            }
+            std::cout << "One of your " << name << " has been destroyed." << std::endl;
+        }
     }
     int get_weakness()
     {
@@ -85,16 +120,18 @@ private:
     float health;   // how much health do you have?
     int wind_prot;  // how much wind protection do you have?
     int water_prot; // how well can you protect against floods?
+    int quake_prot; // how well can you protect against earthquakes?
     // int level;      // what level are you on?
     std::vector<Item> items;
 
 public:
-    Person(float health, float money, int wind_prot, int water_prot)
+    Person(float health, float money, int wind_prot, int water_prot, int quake_prot)
     {
         this->health = health;
         this->money = money;
         this->wind_prot = wind_prot;
         this->water_prot = water_prot;
+        this->quake_prot = quake_prot;
     }
     Person()
     {
@@ -102,6 +139,7 @@ public:
         this->money = 0;
         this->wind_prot = 0;
         this->water_prot = 0;
+        this->quake_prot = 0;
     }
     float get_money()
     {
@@ -150,6 +188,14 @@ public:
     void set_items(std::vector<Item> items)
     {
         this->items = items;
+    }
+    int get_quake_prot()
+    {
+        return this->quake_prot;
+    }
+    void set_quake_prot(int quake_prot)
+    {
+        this->quake_prot = quake_prot;
     }
     // int get_level()
     // {
@@ -256,6 +302,8 @@ public:
                     p.remove_item(items[i]);
                     i--;
                 }
+            } else {
+                items[i].set_health(items[i].get_health() - get_gen_dmg() / 3);
             }
         }
     }
@@ -310,6 +358,8 @@ public:
                     p.remove_item(items[i]);
                     i--;
                 }
+            } else {
+                items[i].set_health(items[i].get_health() - get_gen_dmg() / 3);
             }
         }
     }
@@ -349,7 +399,26 @@ class Earthquake : public Disaster {
         bool flood;
         Flood *f;
     public:
-        void do_damage(Person& p);
+        void do_damage(Person& p) {
+            if (flood) {
+                f->do_damage(p);
+            }
+            p.set_health(p.get_health() - gen_damage);
+            std::vector<Item> items = p.get_items();
+            for (int i = 0; i < items.size(); i++) {
+                if (items[i].get_weakness() == disaster_type::EARTHQUAKE) {
+                    items[i].set_health(items[i].get_health() - gen_damage);
+                    if (items[i].get_health() <= 0) {
+                        items[i].set_health(0);
+                        items[i].set_destroyed(true);
+                        p.remove_item(items[i]);
+                        i--;
+                    }
+                } else {
+                    items[i].set_health(items[i].get_health() - gen_damage / 3);
+                }
+            }
+        }
         Earthquake(int gen_damage, bool flood, float mag) : Disaster(gen_damage, disaster_type::EARTHQUAKE) {
             this->mag = mag;
             this->gen_damage = gen_damage;
