@@ -110,43 +110,48 @@ public:
     }
 };
 
-// class Foundation : public Item {
-//     private:
-//         float depth;
-//         bool support;
-//     public:
-//         Foundation(Person &p): Item (5.0, 20, FLOOD) {
-//                 this->depth = 1;
-//                 this->support = false;
-//                 (p).set_water_prot((p).get_water_prot() + 2);
-//             }
-//         float get_depth() {
-//             return this->depth;
-//         }
-//         void set_depth(float depth) {
-//             this->depth = depth;
-//         }
-//         bool get_support() {
-//             return this->support;
-//         }
-//         void set_support(bool support) {
-//             this->support = support;
-//         }
-//         void minus_health(float health) {
-//             this->set_health(this->get_health() - health);
-//         }
-//         void add_support() {
-//             this->set_health(this->get_health() + 20);
-//             this->set_support(true);
-//         }
-//         void repair() {
-//             if(this->get_support()) {
-//                 this->set_health(40);
-//             }
-//             else {
-//                 this->set_health(20);
-//             }
-//         }
-// };
+class Foundation : public Item {
+    private:
+        float depth;
+        bool support;
+    public:
+        Foundation(Person &p): Item (5.0, 20, EARTHQUAKE, "Foundation bolting, or seismic retrofitting, "
+            "is a technique used to enhance the earthquake resistance of a building by securely anchoring "
+            "the structure to its foundation. This involves installing anchor bolts that attach the building's"
+            " wooden frame to a concrete foundation, thus preventing the building from sliding or shifting off "
+            "the foundation during seismic activity. Some places in modern day that utilize foundation bolting: "
+            "California, Japan, New Zealand, and Turkey.") {
+                this->depth = 1;
+                this->support = false;
+                (p).set_water_prot((p).get_water_prot() + 2);
+            }
+        float get_depth() {
+            return this->depth;
+        }
+        void set_depth(float depth) {
+            this->depth = depth;
+        }
+        bool get_support() {
+            return this->support;
+        }
+        void set_support(bool support) {
+            this->support = support;
+        }
+        void minus_health(float health) {
+            this->set_health(this->get_health() - health);
+        }
+        void add_support() {
+            this->set_health(this->get_health() + 20);
+            this->set_support(true);
+        }
+        void repair() {
+            if(this->get_support()) {
+                this->set_health(40);
+            }
+            else {
+                this->set_health(20);
+            }
+        }
+};
 
 #endif

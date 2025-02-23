@@ -8,9 +8,9 @@
 enum disaster_type
 {
     TYPHOON,
-    FLOOD
+    FLOOD,
     // Volcanic_eruption,
-    // Earthquake
+    EARTHQUAKE
 };
 
 class Item
@@ -269,7 +269,7 @@ private:
 class Typhoon : public Disaster
 {
 public:
-    Typhoon(float gen_damage, bool flood, float min, float wind_speed)
+    Typhoon(int gen_damage, bool flood, float min, float wind_speed)
         : Disaster(gen_damage, disaster_type::TYPHOON)
     {
         this->flood = flood;
@@ -287,15 +287,11 @@ public:
         }
         return false;
     }
-    void do_damage(Person &p, float gen_dam)
+    void do_damage(Person &p)
     {
         if (flood)
         {
             f->do_damage(p);
-        }
-        else
-        {
-            p.set_health(p.get_health() - gen_dam);
         }
         if (this->wind_speed > p.get_wind_prot())
         {
@@ -331,24 +327,60 @@ private:
     float min_wind_height; // what is the minimum height that will cause the hut to fly away?
 };
 
-class VolcanicEruption : public Disaster
-{
-public:
-    VolcanicEruption(float gen_damage, float lava_height)
-        : Disaster(gen_damage, disaster_type::FLOOD)
-    {
-        this->lava_height = lava_height;
-    }
-    // bool cause_quake(); // causes earthquake if there is one, returns if earthquake was caused
-    bool do_damage(float); // float for lava_height, returns whether damage successfully inflicted
-private:
-    float lava_height;
-    // bool earthquake;
-};
-
-// class Earthquake : public Disaster {
-//     public:
-//         bool do_damage(float);
+// class VolcanicEruption : public Disaster
+// {
+// public:
+//     VolcanicEruption(float gen_damage, float lava_height)
+//         : Disaster(gen_damage, disaster_type::FLOOD)
+//     {
+//         this->lava_height = lava_height;
+//     }
+//     // bool cause_quake(); // causes earthquake if there is one, returns if earthquake was caused
+//     bool do_damage(float); // float for lava_height, returns whether damage successfully inflicted
+// private:
+//     float lava_height;
+//     // bool earthquake;
 // };
+
+class Earthquake : public Disaster {
+    private:
+        float mag;
+        int gen_damage;
+        bool flood;
+        Flood *f;
+    public:
+        void do_damage(Person& p);
+        Earthquake(int gen_damage, bool flood, float mag) : Disaster(gen_damage, disaster_type::EARTHQUAKE) {
+            this->mag = mag;
+            this->gen_damage = gen_damage;
+            this->flood = flood;
+            f = nullptr;
+        }
+        bool cause_flood() {
+            if (this->flood) {
+                f = new Flood(this->gen_damage, this->mag);
+                return true;
+            }
+            return false;
+        }
+        float get_mag() {
+            return this->mag;
+        }
+        void set_mag(float mag) {
+            this->mag = mag;
+        }
+        int get_gen_damage() {
+            return this->gen_damage;
+        }
+        void set_gen_damage(int gen_damage) {
+            this->gen_damage = gen_damage;
+        }
+        bool hasFlood() {
+            return flood;
+        }
+        void setFlood(bool f) {
+            flood = f;
+        }
+};
 
 #endif
