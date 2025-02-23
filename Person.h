@@ -70,7 +70,6 @@ class Person {
             this->items.push_back(item);
         }
         void remove_item(Item* item) {
-            this->money -= item->get_cost();
             for (int i = 0; i < this->items.size(); i++) {
                 if (this->items[i] == item) {
                     this->items.erase(this->items.begin() + i);

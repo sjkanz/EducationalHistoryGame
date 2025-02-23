@@ -55,6 +55,9 @@ class Item {
 };
 
 class Stilts : public Item {
+    private:
+        float height;
+        bool support;
     public:
         static int total_stilts;
         const static int max_stilts = 5; // if >= 5 stilts, there's less resistance to wind
@@ -95,9 +98,6 @@ class Stilts : public Item {
                 this->set_health(10);
             }
         }
-    private:
-        float height;
-        bool support;
 };
 
 #endif

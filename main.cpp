@@ -22,6 +22,7 @@ int go_fish();
 int print_menu();
 int shop();
 int go_flood();
+bool hazard(Person*);
 
 
 void timer() {
@@ -115,9 +116,14 @@ int main() {
     // end of Walkthrough
     //starting the timer in a separate thread
     std::thread timerThread(timer);
+    timerThread.detach();
     //main game loop
     choice = print_menu(&p);
+    bool hazard = false;
     while (choice != 3) {
+        if (hazard && timer_expired) {
+            std::thread timerThread(timer);
+        }
         while (!(choice == 1 || choice == 2)) {
             std::cout<<"That's not one of the options. Please try again."<<std::endl;
             choice = print_menu();
@@ -144,13 +150,37 @@ int main() {
             }
         }
         if (timer_expired) {
+                bool boop = crisis(&p);
             // insert function here
         }
         choice = print_menu(&p);
     }
+    //waiting for thread to finish
     return 0;
 }
 
+bool crisis(Person *p) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> distrib(1, 3);
+    int hazard = distrib(gen);
+    std::uniform_int_distribution<> distrib2(1, 10);
+    if (hazard == 1) {
+        std::cout<<"A flood is coming!"<<std::endl;
+        Flood flood(distrib2(gen), distrib2(gen));
+        flood.do_damage(p);
+        return true;
+    }
+    else if (hazard == 2) {
+        std::cout<<"A tornado is coming! You need a storm cellar to protect against it."<<std::endl;
+        return true;
+    }
+    else if (hazard == 3) {
+        std::cout<<"An earthquake is coming! You need a foundation to protect against it."<<std::endl;
+        return true;
+    }
+    return false;
+}
 
 int print_menu(Person *p) {
     std::cout<<"Current Stats:"<<std::endl;
