@@ -24,12 +24,12 @@ enum item_type
 class Item
 {
 private:
-    float cost;
-    int health;
-    bool destroyed;
-    int weakness;
-    std::string info;
-    int type;
+    float cost; //how many shells does this item cost
+    int health; //how many hit points remain on this item
+    bool destroyed; //was this item destroyed
+    int weakness; // which of the disaster_types is this item weak to
+    std::string info; // general description of the item
+    int type; // which of the number in the enum item_type does this item correlate with
 
 public:
     Item(float cost, int health, int weakness, int type, std::string info)
@@ -41,6 +41,8 @@ public:
         this->type = type;
         this->info = info;
     }
+
+    /* Getters and Setters */
     int get_type()
     {
         return this->type;
@@ -74,6 +76,7 @@ public:
         this->destroyed = destroyed;
         if (destroyed)
         {
+            //printing information to communicate that something has been destroyed
             std::string name = " ";
             if (this->type == STILTS)
             {
@@ -122,7 +125,7 @@ private:
     int water_prot; // how well can you protect against floods?
     int quake_prot; // how well can you protect against earthquakes?
     // int level;      // what level are you on?
-    std::vector<Item> items;
+    std::vector<Item> items; //what items has the player bought?
 
 public:
     Person(float health, float money, int wind_prot, int water_prot, int quake_prot)
@@ -141,6 +144,8 @@ public:
         this->water_prot = 0;
         this->quake_prot = 0;
     }
+
+    /* Getters and Setters*/
     float get_money()
     {
         return this->money;
@@ -205,11 +210,14 @@ public:
     // {
     //     this->level = level;
     // }
+    /* When called, this adds item to the player's items, while subtracting the cost of the item from the player's money */
     void add_item(Item item)
     {
         this->money -= item.get_cost();
         this->items.push_back(item);
     }
+
+    /* When called, this removes an item from a player's inventory */
     void remove_item(Item item)
     {
         for (int i = 0; i < this->items.size(); i++)
@@ -254,6 +262,8 @@ public:
     // void set_quake_mag(float earthquake_mag) {
     //     this->earthquake_mag = earthquake_mag;
     // }
+
+    /* Getters and Setters */
     float get_gen_dmg()
     {
         return this->gen_damage;
@@ -283,6 +293,10 @@ public:
     {
         this->flood_height = flood_height;
     }
+
+    /* This does damage to the protection items the player has based on the values of the player's protection
+     * and the type of prtective items the player has bought.
+     */
     void do_damage(Person &p)
     {
         if (this->flood_height > p.get_water_prot())
@@ -309,7 +323,7 @@ public:
     }
 
 private:
-    float flood_height;
+    float flood_height; // this is the height of the flood, varies
     // bool disease; // if this water has disease, then health drops rapidly
     //  ADD MEDKIT AND DISEASE LATER
 };
@@ -335,6 +349,10 @@ public:
         }
         return false;
     }
+
+    /* This function, when called, does damage to a Person's health and to their items
+     * based on the types of protection items the person has
+     */
     void do_damage(Person &p)
     {
         if (flood)
@@ -363,6 +381,8 @@ public:
             }
         }
     }
+
+    /* Getters and Setters */
     bool hasFlood() { return flood; };
     void setFlood(bool f) { flood = f; };
     float get_min_wind_height() { return min_wind_height; };
@@ -372,7 +392,7 @@ public:
 
 private:
     bool flood;
-    Flood *f;
+    Flood *f;e
     float wind_speed;
     float min_wind_height; // what is the minimum height that will cause the hut to fly away?
 };
@@ -399,6 +419,10 @@ class Earthquake : public Disaster {
         bool flood;
         Flood *f;
     public:
+
+        /* This function, when called, does damage to a Person's health and to their items
+         * based on the types of protection items the person has
+         */
         void do_damage(Person& p) {
             if (flood) {
                 f->do_damage(p);
@@ -425,6 +449,10 @@ class Earthquake : public Disaster {
             this->flood = flood;
             f = nullptr;
         }
+
+        /* If this earthquake is marked to cause a flood, when called, this function will 
+         * create a flood object and assign it to the Flood f variable
+         */
         bool cause_flood() {
             if (this->flood) {
                 f = new Flood(this->gen_damage, this->mag);
@@ -432,6 +460,8 @@ class Earthquake : public Disaster {
             }
             return false;
         }
+
+        /* Getters and Setters */
         float get_mag() {
             return this->mag;
         }
